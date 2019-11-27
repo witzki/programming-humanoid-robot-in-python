@@ -22,6 +22,7 @@
 
 from pid import PIDAgent
 from keyframes import hello, leftBackToStand, leftBellyToStand, rightBackToStand, rightBellyToStand, wipe_forehead
+import numpy as np
 
 
 class AngleInterpolationAgent(PIDAgent):
@@ -49,6 +50,49 @@ class AngleInterpolationAgent(PIDAgent):
             self.time = rtime
         vtime = rtime - self.time
 
+        for i, name in enumerate(keyframes[0]):
+            # getting simulations times
+            stime = keyframes[1][i]
+            if vtime > stime[-1]:
+                break
+
+            # getting points x is for time and y is for the angle
+            index = len([x for x in stime if x < vtime])
+            if index == 0:
+                p0x = 0
+                key_l = keyframes[2][i][index]
+            else:
+                p0x = stime[index - 1]
+                key_l = keyframes[2][i][index - 1]
+            p1x = p0x + key_l[2][1]
+            key_r = keyframes[2][i][index]
+            p3x = stime[index]
+            p2x = p3x + key_r[1][1]
+            p0y = key_l[0]
+            p1y = p0y + key_l[2][2]
+            p3y = key_r[0]
+            p2y = p3y + key_r[1][2]
+
+            bezierMatrix = np.array([[1, 0, 0, 0], [-3, 3, 0, 0], [3, -6, 3, 0], [-1, 3, -3, 1]])
+            x = np.array([p0x, p1x, p2x, p3x])
+            y = np.array([p0y, p1y, p2y, p3y])
+            coefficientsX = np.dot(bezierMatrix, x)
+            coefficientsX[0] -= vtime
+            candidates = np.polynomial.polynomial.polyroots(coefficientsX)
+            epsilon = 1e-6  # error margin for x to t conversion
+            # finding correct candidate for t (t has to be in [0,1])
+            t = [x.real for x in candidates if -(epsilon) <= x.real <= 1 + (epsilon) and x.imag == 0][0]
+
+
+            # getting y values
+            coefficientsY = np.dot(bezierMatrix, y)
+            result = np.dot(np.array([1, t, t ** 2, t ** 3]), coefficientsY)
+            target_joints[name] = result
+
+
+
+        # Badly wrong implementation
+        """
         for index in range(len(keyframes[0])):
             # get name
             name = keyframes[0][index]
@@ -70,8 +114,8 @@ class AngleInterpolationAgent(PIDAgent):
                         point = (((1 - t) ** 3) * p0) + (((3 * ((1 - t) ** 2)) * p1) * t) + (
                                     ((3 * (1 - t)) * p2) * (t ** 2)) + (p3 * (t ** 3))
                         target_joints[name] = point
-
         # print target_joints
+        """
 
         return target_joints
 
@@ -81,6 +125,6 @@ if __name__ == '__main__':
     # agent.keyframes = leftBackToStand()
     # agent.keyframes = leftBellyToStand()
     # agent.keyframes = rightBackToStand()
-    # agent.keyframes = rightBellyToStand()
+    agent.keyframes = rightBellyToStand()
     # agent.keyframes = wipe_forehead()
     agent.run()
