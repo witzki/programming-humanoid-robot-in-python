@@ -7,10 +7,11 @@
 
 
 from recognize_posture import PostureRecognitionAgent
-from keyframes import rightBellyToStand, hello, leftBackToStand
+from keyframes import leftBellyToStand, hello, leftBackToStand
 
 
 class StandingUpAgent(PostureRecognitionAgent):
+    started = 1
     def think(self, perception):
         self.standing_up()
         return super(StandingUpAgent, self).think(perception)
@@ -18,14 +19,18 @@ class StandingUpAgent(PostureRecognitionAgent):
     def standing_up(self):
         posture = self.posture
         # YOUR CODE HERE
-
-        if posture is 'Belly':
-            self.keyframes = rightBellyToStand()
-        elif posture is 'Back':
-            self.keyframes = leftBackToStand()
-        else:
-            self.keyframes = hello()
-        
+        print posture
+        if self.started:
+            if posture == 'Belly':
+                print 'start belly'
+                self.keyframes = leftBellyToStand()
+                self.set_time()
+                self.started = 0
+            elif posture == 'Back':
+                print 'start back'
+                self.keyframes = leftBackToStand()
+                self.set_time()
+                self.started = 0
 
 
 class TestStandingUpAgent(StandingUpAgent):
@@ -48,6 +53,7 @@ class TestStandingUpAgent(StandingUpAgent):
             action.stiffness = {j: 0 for j in self.joint_names}  # turn off joints
         else:
             action.stiffness = {j: 1 for j in self.joint_names}  # turn on joints
+            None
         if time_now - self.stiffness_on_off_time > self.stiffness_on_cycle + self.stiffness_off_cycle:
             self.stiffness_on_off_time = time_now
 

@@ -41,6 +41,9 @@ class AngleInterpolationAgent(PIDAgent):
         self.target_joints.update(target_joints)
         return super(AngleInterpolationAgent, self).think(perception)
 
+    def set_time(self, time=0):
+        self.time = time
+
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
         # YOUR CODE HERE
@@ -98,10 +101,12 @@ class AngleInterpolationAgent(PIDAgent):
             result = np.dot(np.array([1, t, t ** 2, t ** 3]), coefficientsY)
             target_joints[name] = result
 
+        """
         for key, value in target_joints.items():
             print key, ': ', value
 
         print '****************************************************************'
+        """
 
         return target_joints
 
