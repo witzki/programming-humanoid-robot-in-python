@@ -34,6 +34,7 @@ class AngleInterpolationAgent(PIDAgent):
         super(AngleInterpolationAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.keyframes = ([], [], [])
         self.time = 0
+        self.keyframe_start = []
 
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes, perception)
@@ -45,9 +46,16 @@ class AngleInterpolationAgent(PIDAgent):
         # YOUR CODE HERE
 
         # NOTE needed to build in virtual time because time in perception.time is the simulation time and not
+        # build own first keyframe little bit change that impact in the result
         rtime = perception.time
         if self.time == 0:
             self.time = rtime
+            for j, n in enumerate(self.keyframes[0]):
+                offset = self.keyframes[2][j][0][1][1]
+                if n in self.perception.joint:
+                    self.keyframe_start.append([self.perception.joint[n], [3, 0, 0], [3, -offset, 0]])
+                else:
+                    self.keyframe_start.append([0, [3, 0, 0], [3, -offset, 0]])
         vtime = rtime - self.time
 
         for i, name in enumerate(keyframes[0]):
@@ -60,10 +68,11 @@ class AngleInterpolationAgent(PIDAgent):
             index = len([x for x in stime if x < vtime])
             if index == 0:
                 p0x = 0
-                key_l = keyframes[2][i][index]
+                key_l = self.keyframe_start[i]
             else:
                 p0x = stime[index - 1]
                 key_l = keyframes[2][i][index - 1]
+
             p1x = p0x + key_l[2][1]
             key_r = keyframes[2][i][index]
             p3x = stime[index]
@@ -89,42 +98,19 @@ class AngleInterpolationAgent(PIDAgent):
             result = np.dot(np.array([1, t, t ** 2, t ** 3]), coefficientsY)
             target_joints[name] = result
 
+        for key, value in target_joints.items():
+            print key, ': ', value
 
-
-        # Badly wrong implementation
-        """
-        for index in range(len(keyframes[0])):
-            # get name
-            name = keyframes[0][index]
-            if name is 'LHand' or name is 'LWristYaw' or name is 'RHand' or name is 'RWristYaw':
-                # Don't know what to todo with his values because they not inside perception.joints!!!!!
-                None
-            else:
-                # check in wich time stamp we are
-                for time_index in range(len(keyframes[1][index])):
-                    time = keyframes[1][index][time_index]
-                    if time > vtime:
-                        p0 = perception.joint[name]
-                        p3 = keyframes[2][index][time_index][0]
-                        time_p1 = time + keyframes[2][index][time_index][1][1]
-                        p1 = p3 + keyframes[2][index][time_index][1][2]
-                        time_p2 = time + keyframes[2][index][time_index][2][1]
-                        p2 = p3 + keyframes[2][index][time_index][2][2]
-                        t = vtime / keyframes[1][index][-1]
-                        point = (((1 - t) ** 3) * p0) + (((3 * ((1 - t) ** 2)) * p1) * t) + (
-                                    ((3 * (1 - t)) * p2) * (t ** 2)) + (p3 * (t ** 3))
-                        target_joints[name] = point
-        # print target_joints
-        """
+        print '****************************************************************'
 
         return target_joints
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
     agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
-    # agent.keyframes = leftBackToStand()
+    agent.keyframes = leftBackToStand()
     # agent.keyframes = leftBellyToStand()
     # agent.keyframes = rightBackToStand()
-    agent.keyframes = rightBellyToStand()
+    # agent.keyframes = rightBellyToStand()
     # agent.keyframes = wipe_forehead()
     agent.run()
