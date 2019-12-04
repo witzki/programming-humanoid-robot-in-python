@@ -12,9 +12,23 @@
 
 from forward_kinematics import ForwardKinematicsAgent
 from numpy.matlib import identity
+import numpy as np
+from scipy.optimize import fmin_cg
 
 
 class InverseKinematicsAgent(ForwardKinematicsAgent):
+    def error_func(self, angle_start, effector, transform):
+        angles = {}
+        T = np.identity(4)
+        for i, current_joint in enumerate(self.chains[effector]):
+            angle = angle_start[i]
+            Tl = self.local_trans(current_joint, angle)
+            T = np.dot(T, Tl)
+        rotation_error = np.sum(np.power((T[0:3, 0:3] * transform.T[0:3, 0:3]) - identity(3), 2))
+        trans_error = np.linalg.norm(T[0:3, 3:4] - transform[0:3, 3:4])
+
+        return rotation_error * 12 + trans_error
+
     def inverse_kinematics(self, effector_name, transform):
         '''solve the inverse kinematics
 
@@ -23,13 +37,30 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         :return: list of joint angles
         '''
         joint_angles = []
-        # YOUR CODE HERE
+        # YOUR CODE
+        for joint in self.chains[effector_name]:
+            joint_angles.append(self.perception.joint[joint])
+        joint_angles = fmin_cg(self.error_func, joint_angles, args=(effector_name, transform))
+
         return joint_angles
 
     def set_transforms(self, effector_name, transform):
         '''solve the inverse kinematics and control joints use the results
         '''
         # YOUR CODE HERE
+        angle = self.inverse_kinematics(effector_name, transform)
+        names = []
+        time = []
+        key = []
+
+        for i, joint in enumerate(self.chains[effector_name]):
+            names.append(joint)
+            time.append([0, 1])
+            key.append([angle[i],
+                [3, np.zeros(3), np.zeros(3)],
+                [3, np.zeros(3), np.zeros(3)]
+            ])
+        # have problems to build keyframe
         self.keyframes = ([], [], [])  # the result joint angles have to fill in
 
 if __name__ == '__main__':

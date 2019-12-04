@@ -109,7 +109,7 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
                 Tl = self.local_trans(joint, angle)
                 # YOUR CODE HERE
                 T = np.dot(T, Tl)
-                print T
+                # print T
 
                 self.transforms[joint] = T
 
