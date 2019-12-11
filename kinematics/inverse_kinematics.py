@@ -18,7 +18,6 @@ from scipy.optimize import fmin_cg
 
 class InverseKinematicsAgent(ForwardKinematicsAgent):
     def error_func(self, angle_start, effector, transform):
-        angles = {}
         T = np.identity(4)
         for i, current_joint in enumerate(self.chains[effector]):
             angle = angle_start[i]
@@ -36,12 +35,12 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         :param transform: 4x4 transform matrix
         :return: list of joint angles
         '''
+
         joint_angles = []
         # YOUR CODE
         for joint in self.chains[effector_name]:
             joint_angles.append(self.perception.joint[joint])
         joint_angles = fmin_cg(self.error_func, joint_angles, args=(effector_name, transform))
-
         return joint_angles
 
     def set_transforms(self, effector_name, transform):
@@ -49,25 +48,32 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         '''
         # YOUR CODE HERE
         angle = self.inverse_kinematics(effector_name, transform)
-        names = []
-        time = []
-        key = []
+        names = list()
+        time = list()
+        key = list()
 
         for i, joint in enumerate(self.chains[effector_name]):
             names.append(joint)
             time.append([0, 1])
-            key.append([angle[i],
-                [3, np.zeros(3), np.zeros(3)],
-                [3, np.zeros(3), np.zeros(3)]
-            ])
-        # have problems to build keyframe
-        self.keyframes = ([], [], [])  # the result joint angles have to fill in
+            key.append([[0, [3, -0.00001, 0.00000], [3, 0.00001, 0.00001]],
+                        [angle[i], [3, -0.00001, 0.00001], [3, 0.00001, 0.00001]]])
+        self.keyframes = (names, time, key)  # the result joint angles have to fill in
 
 if __name__ == '__main__':
     agent = InverseKinematicsAgent()
     # test inverse kinematics
+
     T = identity(4)
     T[-1, 1] = 0.05
     T[-1, 2] = 0.26
     agent.set_transforms('LLeg', T)
     agent.run()
+    """
+    T = identity(4)
+    T[0, 0] = 2
+    T[0, 1] = 2
+    T[0, 2] = 2
+
+    agent.set_transforms('RLeg', T)
+    agent.run()
+    """

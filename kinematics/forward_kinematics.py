@@ -101,7 +101,7 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         for chain_joints in self.chains.values():
             T = np.identity(4)
             for joint in chain_joints:
-                # this two are not inside joints
+                # this are not inside joints
                 if joint == 'RWristYaw' or joint == 'LWristYaw' or joint == 'LHand' or joint == 'RHand':
                     angle = 0
                 else:
