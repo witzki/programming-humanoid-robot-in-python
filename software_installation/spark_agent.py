@@ -219,6 +219,7 @@ class SparkAgent(object):
         init_cmd = ('(init (unum ' + str(player_id) + ')(teamname ' + teamname + '))')
         self.send_command(init_cmd)
         self.thread = None
+        self.rpc_block = False
 
         while player_id == 0:
             self.sense()

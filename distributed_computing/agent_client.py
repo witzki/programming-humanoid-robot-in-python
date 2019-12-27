@@ -7,6 +7,8 @@
 '''
 
 import weakref
+import Pyro4
+
 
 class PostHandler(object):
     '''the post hander wraps function to be excuted in paralle
@@ -29,15 +31,18 @@ class ClientAgent(object):
     # YOUR CODE HERE
     def __init__(self):
         self.post = PostHandler(self)
+        self.rpc_client = Pyro4.Proxy("PYRONAME:nao.robot")
     
     def get_angle(self, joint_name):
         '''get sensor value of given joint'''
         # YOUR CODE HERE
+        print self.rpc_client.get_angle(joint_name)
     
     def set_angle(self, joint_name, angle):
         '''set target angle of joint for PID controller
         '''
         # YOUR CODE HERE
+        self.rpc_client.set_angle(joint_name, angle)
 
     def get_posture(self):
         '''return current posture of robot'''
@@ -61,6 +66,11 @@ class ClientAgent(object):
 
 if __name__ == '__main__':
     agent = ClientAgent()
+    agent.get_angle('LShoulderPitch')
+    agent.set_angle('LShoulderPitch', 1)
+    agent.get_angle('LShoulderPitch')
+    agent.get_angle('LShoulderPitch')
+    agent.get_angle('LShoulderPitch')
     # TEST CODE HERE
 
 
