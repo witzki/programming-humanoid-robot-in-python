@@ -55,6 +55,6 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
 if __name__ == '__main__':
     agent = PostureRecognitionAgent()
     agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
-    agent.keyframes = leftBackToStand()
-    agent.keyframes = leftBellyToStand()
+    # agent.keyframes = leftBackToStand()
+    # agent.keyframes = leftBellyToStand()
     agent.run()

@@ -57,6 +57,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
             time.append([0, 1])
             key.append([[0, [3, -0.00001, 0.00000], [3, 0.00001, 0.00001]],
                         [angle[i], [3, -0.00001, 0.00001], [3, 0.00001, 0.00001]]])
+        self.set_time(0)
         self.keyframes = (names, time, key)  # the result joint angles have to fill in
 
 if __name__ == '__main__':

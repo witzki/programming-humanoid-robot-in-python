@@ -33,8 +33,9 @@ class AngleInterpolationAgent(PIDAgent):
                  sync_mode=True):
         super(AngleInterpolationAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.keyframes = ([], [], [])
-        self.time = 0
+        self.time_local = 0
         self.keyframe_start = []
+        self.first_start = True
 
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes, perception)
@@ -42,7 +43,7 @@ class AngleInterpolationAgent(PIDAgent):
         return super(AngleInterpolationAgent, self).think(perception)
 
     def set_time(self, time=0):
-        self.time = time
+        self.time_local = time
 
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
@@ -51,15 +52,15 @@ class AngleInterpolationAgent(PIDAgent):
         # NOTE needed to build in virtual time because time in perception.time is the simulation time and not
         # build own first keyframe little bit change that impact in the result
         rtime = perception.time
-        if self.time == 0:
-            self.time = rtime
+        if self.time_local == 0:
+            self.time_local = rtime
             for j, n in enumerate(self.keyframes[0]):
                 offset = self.keyframes[2][j][0][1][1]
                 if n in self.perception.joint:
                     self.keyframe_start.append([self.perception.joint[n], [3, 0, 0], [3, -offset, 0]])
                 else:
                     self.keyframe_start.append([0, [3, 0, 0], [3, -offset, 0]])
-        vtime = rtime - self.time
+        vtime = rtime - self.time_local
 
         for i, name in enumerate(keyframes[0]):
             # getting simulations times
